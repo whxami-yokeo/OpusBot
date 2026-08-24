@@ -15,10 +15,38 @@ It is built with python/discord.py and provides:
 - Embed Generation
 - Database Support
 
+## Support
+
+- Security vulnerabilities: See [Security Policy](SECURITY.md)
+- Privacy questions or data-deletion requests: See [Privacy Policy](privacy.md)
+- Terms of use: See [Terms of Service](terms.md)
+
+Do not post bot tokens, API keys, private logs, personal data, or vulnerability
+details in public issues.
+
+## Legal
+
+- [Privacy Policy](privacy.md)
+- [Terms of Service](terms.md)
+- [Security Policy](SECURITY.md)
+- [License](LICENSE.md)
+
+This project is not affiliated with, endorsed by, or sponsored by Discord Inc.
+Discord is a trademark of Discord Inc.
+
+## Source Availability
+
+This repository is published for display and personal educational review only.
+Running, copying, modifying, redistributing, or deploying the source code is
+not permitted without prior written permission. See [Display and Educational Use License](LICENSE.md).
+
 ## License
 
-This project is source-available for viewing and reference only. It is not
-open source. You may not copy, use, modify, redistribute, deploy, or create
-derivative works from this code without prior written permission.
+This source code is provided under the
+[Display and Educational Use License](LICENSE.md).
 
-See LICENSE.md.
+You may view the repository for personal, non-commercial educational purposes
+only. You may not copy, run, modify, redistribute, deploy, or use this code in
+another project without prior written permission from the copyright holder.
+
+© 2026 Eddie Menard. All rights reserved.

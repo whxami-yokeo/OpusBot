@@ -1,6 +1,6 @@
 # Display and Educational Use License
 
-Copyright (c) 2026 Eddie Menard. All rights reserved.
+Copyright © 2026 Eddie Menard. All rights reserved.
 
 ## Permission
 
