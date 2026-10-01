@@ -12,7 +12,8 @@ from database import init_db
 
 load_dotenv()
 TOKEN = os.getenv("DISCORD_TOKEN", "").strip()
-DEV_GUILD_ID = int(os.getenv("DEV_GUILD_ID") or 0)
+DEV_GUILD_ID = 579439317156626452
+MAIN_GUILD_ID = 1214329373528957028
 
 logging.basicConfig(level=logging.INFO)
 intents = discord.Intents.all()
@@ -41,14 +42,28 @@ class Bot(commands.Bot):
             await self.load_extension(module_name)
             logging.info(f"✅ Loaded cog: {module_name}")
 
-        # Sync slash commands (dev guild for instant testing)
-        if DEV_GUILD_ID:
-            self.tree.copy_global_to(guild=discord.Object(id=DEV_GUILD_ID))
-            synced = await self.tree.sync(guild=discord.Object(id=DEV_GUILD_ID))
-            logging.info(f"⚙️ Synced {len(synced)} slash commands to dev guild.")
-        else:
-            await self.tree.sync()
-            logging.info("⚙️ Synced global slash commands.")
+        guild_ids = {
+            MAIN_GUILD_ID,
+            DEV_GUILD_ID,
+        }
+
+        for guild_id in guild_ids:
+            if not guild_id:
+                continue
+
+            guild = discord.Object(id=guild_id)
+
+            # Copy globally declared hybrid/application commands into this guild's
+            # guild-specific tree and register/update them immediately.
+            self.tree.copy_global_to(guild=guild)
+
+            synced = await self.tree.sync(guild=guild)
+
+            logging.info(
+                "⚙️ Synced %s slash commands immediately to guild %s.",
+                len(synced),
+                guild_id,
+            )
 
     async def on_ready(self):
         if self.started_at is None:

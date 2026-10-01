@@ -3,7 +3,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 import aiosqlite
-from database import DB_PATH, has_dm_sequence, start_dm_sequence, log_task_run
+from database import DB_PATH, has_dm_sequence, start_dm_sequence, log_task_run, has_received_verification_reminder, mark_verification_reminder_sent
 from cogs.events import VERIFIED_ROLE_ID
 
 
@@ -421,11 +421,11 @@ class Core(commands.Cog, name="Core"):
                 await target.response.send_message(msg, ephemeral=True)
             return
 
-        msg_status = f"🔍 Scanning {target_guild.name} for unverified members..."
         if is_prefix:
+            msg_status = f"🔍 Scanning {target_guild.name} for unverified members..."
             status_msg = await target.send(msg_status)
         else:
-            await target.response.send_message(msg_status, ephemeral=True)
+            await target.response.defer(ephemeral=True)
             status_msg = None
 
         try:
@@ -456,6 +456,12 @@ class Core(commands.Cog, name="Core"):
                             continue
                     except discord.NotFound:
                         pass
+
+                # Check if user has already received a verification reminder
+                already_reminded = await has_received_verification_reminder(member.id)
+                if already_reminded:
+                    skipped_count += 1
+                    continue
 
                 # Build verification reminder embed
                 embed = discord.Embed(
@@ -494,6 +500,7 @@ class Core(commands.Cog, name="Core"):
                 try:
                     await member.send(embed=embed)
                     sent_count += 1
+                    await mark_verification_reminder_sent(member.id)
                     import logging
                     logging.info(f"✅ Verification reminder sent to {member} ({member.id})")
                     await log_task_run(
