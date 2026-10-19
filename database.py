@@ -1,3 +1,4 @@
+import logging
 import aiosqlite
 from datetime import datetime
 from pathlib import Path
@@ -29,15 +30,6 @@ async def init_db():
                 username TEXT,
                 message_count INTEGER DEFAULT 0,
                 last_seen TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
-            )
-        """)
-
-        await db.execute("""
-            CREATE TABLE IF NOT EXISTS task_log (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                task_name TEXT,
-                run_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
-                details TEXT
             )
         """)
 
@@ -165,24 +157,28 @@ async def init_db():
 
         await db.commit()
 
-        # Populate verification_reminder_sent table with existing recipients
-        # from task_log. INSERT OR IGNORE prevents duplicates.
-        await db.execute("""
-            INSERT OR IGNORE INTO verification_reminder_sent (user_id, sent_at)
-            SELECT
-                CAST(
-                    SUBSTR(
+        # Migrate existing reminder recipients before removing task_log.
+        cursor = await db.execute("""
+            SELECT 1 FROM sqlite_master
+            WHERE type = 'table' AND name = 'task_log'
+        """)
+        task_log_exists = await cursor.fetchone()
+
+        if task_log_exists:
+            await db.execute("""
+                INSERT OR IGNORE INTO verification_reminder_sent (user_id, sent_at)
+                SELECT
+                    CAST(SUBSTR(
                         details,
                         INSTR(details, '(') + 1,
                         INSTR(details, ')') - INSTR(details, '(') - 1
-                    )
-                    AS TEXT
-                ),
-                run_at
-            FROM task_log
-            WHERE task_name = 'verification_reminder_sent'
-              AND details LIKE '%(%)'
-        """)
+                    ) AS TEXT),
+                    run_at
+                FROM task_log
+                WHERE task_name = 'verification_reminder_sent'
+                  AND details LIKE '%(%)'
+            """)
+            await db.execute("DROP TABLE task_log")
 
         await db.commit()
 
@@ -207,13 +203,8 @@ async def increment_user_message(user_id: str, username: str):
 
 
 async def log_task_run(task_name: str, details: str = ""):
-    async with aiosqlite.connect(DB_PATH) as db:
-        await db.execute(
-            "INSERT INTO task_log (task_name, details) VALUES (?, ?)",
-            (task_name, details),
-        )
-
-        await db.commit()
+    """Log task activity to the console without writing to SQLite."""
+    logging.info("%s: %s", task_name, details)
 
 
 # -----------------------------------------------------------------------------
